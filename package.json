@@ -1,0 +1,16 @@
+{
+  "name": "pickleball-booking-platform",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev:web": "pnpm --filter @pbp/web dev",
+    "dev:api": "pnpm --filter @pbp/api dev",
+    "dev": "pnpm --filter './apps/*' --parallel dev",
+    "build": "pnpm --filter './apps/*' build",
+    "lint": "pnpm --filter './apps/*' lint",
+    "typecheck": "pnpm --filter './apps/*' typecheck"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

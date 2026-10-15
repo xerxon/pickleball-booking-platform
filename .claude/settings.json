@@ -1,0 +1,33 @@
+{
+  "permissions": {
+    "allow": [
+      "Read",
+      "Glob",
+      "Grep",
+      "Bash(pnpm *)",
+      "Bash(npx prisma *)",
+      "Bash(npm *)",
+      "Bash(node *)",
+      "Bash(tsx *)",
+      "Bash(git *)",
+      "Bash(gh *)"
+    ]
+  },
+  "attribution": {
+    "pr": "",
+    "commit": ""
+  },
+  "hooks": {
+    "PostToolUse": [],
+    "SessionEnd": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/session-log.sh"
+          }
+        ]
+      }
+    ]
+  }
+}

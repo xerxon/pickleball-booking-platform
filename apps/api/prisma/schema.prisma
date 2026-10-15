@@ -1,0 +1,124 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  PLAYER
+  OWNER
+}
+
+enum BookingStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  CANCELLED
+  EXPIRED
+}
+
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  name         String
+  passwordHash String
+  role         Role
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  facilities Facility[]
+  bookings   Booking[]
+
+  @@map("users")
+}
+
+model Facility {
+  id          String   @id @default(uuid())
+  name        String
+  address     String
+  city        String
+  state       String
+  zipCode     String
+  timezone    String   // IANA timezone, e.g. "America/New_York"
+  isPublished Boolean  @default(false)
+  ownerId     String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  owner  User    @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  courts Court[]
+
+  @@map("facilities")
+}
+
+model Court {
+  id          String   @id @default(uuid())
+  name        String
+  facilityId  String
+  isIndoor    Boolean  @default(false)
+  surface     String   @default("hard")
+  hourlyPrice Int      // price in cents
+  photoUrl    String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  facility     Facility      @relation(fields: [facilityId], references: [id], onDelete: Cascade)
+  schedules    Schedule[]
+  blockedSlots BlockedSlot[]
+  bookings     Booking[]
+
+  @@map("courts")
+}
+
+model Schedule {
+  id         String @id @default(uuid())
+  courtId    String
+  dayOfWeek  Int    // 0 = Sunday, 6 = Saturday
+  startTime  String // "HH:mm" local facility time
+  endTime    String // "HH:mm" local facility time
+  slotLength Int    @default(60) // 30 or 60 minutes
+
+  court Court @relation(fields: [courtId], references: [id], onDelete: Cascade)
+
+  @@unique([courtId, dayOfWeek])
+  @@map("schedules")
+}
+
+model BlockedSlot {
+  id        String   @id @default(uuid())
+  courtId   String
+  date      DateTime @db.Date
+  startTime DateTime @db.Timestamptz
+  endTime   DateTime @db.Timestamptz
+  reason    String?
+  createdAt DateTime @default(now())
+
+  court Court @relation(fields: [courtId], references: [id], onDelete: Cascade)
+
+  @@map("blocked_slots")
+}
+
+model Booking {
+  id          String        @id @default(uuid())
+  courtId     String
+  playerId    String
+  date        DateTime      @db.Date
+  startTime   DateTime      @db.Timestamptz
+  endTime     DateTime      @db.Timestamptz
+  totalPrice  Int           // price in cents, calculated at request time
+  status      BookingStatus @default(PENDING)
+  rejectReason String?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  court  Court @relation(fields: [courtId], references: [id], onDelete: Cascade)
+  player User  @relation(fields: [playerId], references: [id], onDelete: Cascade)
+
+  @@index([courtId, date])
+  @@index([playerId])
+  @@index([status])
+  @@map("bookings")
+}
